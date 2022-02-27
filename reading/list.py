@@ -18,15 +18,3 @@ https://freecontent.manning.com/running-spark-an-overview-of-sparks-runtime-arch
 
 @@@
 
-
-
-
-
-
-
-
-ベストプラクティスに近い
-ミスを記録する。
-
-ウィキの選択肢を除外していたせいで目的の情報にたどり着けなかった。
-
