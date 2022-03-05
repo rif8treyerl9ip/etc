@@ -26,3 +26,9 @@ dir %copymoto% /b /a:D /O:N | findstr /R "^[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0
 
 for /F "tokens=1" %F in (file1.txt) do set Direc_name=%F
 
+
+
+set copymoto=C:\Users\thyt\SELF_S\shellscrpt\test\日本語ディレクトリ
+
+cd %copymoto%
+%copymoto%20220202
