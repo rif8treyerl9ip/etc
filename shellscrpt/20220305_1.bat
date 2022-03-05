@@ -1,3 +1,4 @@
+@REM アプリ起動してメールチェックなど？
 @REM 管理者権限が必要
 
 cd C:\Program Files\WindowsApps\hash化された文字列？\app
