@@ -2,8 +2,13 @@
 *__pycache__
 *.csv
 *.pqt
+*.zip
+*.xsd
+*.xbrl
+*.zip
 
 /.vscode
 
 piptest/
 scikitallstars-main/
+warehouse/stock/
