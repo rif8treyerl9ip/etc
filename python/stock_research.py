@@ -12,6 +12,7 @@ pd.set_option('display.max_rows',1000)
 import matplotlib.pyplot as plt
 plt.style.use('ggplot')
 import seaborn as sns; sns.set();
+import plotly.graph_objects as go
 
 # タクソノミ用ソリストの下記は営業利益とあるが、本当はOperatingIncomeらしい。
 # まじで意味わからぬ。
@@ -125,3 +126,64 @@ def calc_fiscal_year(prior_year, asof):
     # return datetime.date(int(asof.year - prior_year),asof.month, asof.day)
     return date(int(asof.year - prior_year),asof.month, asof.day)
     
+
+
+
+def plot_sales(df,key):
+    # 連結か個別か
+            # Prior1YearDurationと
+            # Prior1YearDuration_NonConsolidatedMemberをカテゴリ分けするために _ で列分割
+    mask = df.contextID.str.contains('NonConsolidated')
+    mask = mask.astype(int)
+    df['NonConsolidated'] = mask
+
+    tmp = df.query(f'element_id == "{key}"')
+    # plotのためにfloat型に変換
+    tmp['value'] = tmp['value'].astype(float)
+
+    tmp = tmp.query('NonConsolidated == 0')
+    x = tmp['endDatetime']
+    y = tmp['value']
+    YoY = make_YoY(x,y)
+
+    # tmp = pd.concat([x,y],axis=1)
+    plotly_plot(x,y,key,YoY)
+    return x,y
+
+
+def plot_OperatingIncome(df,key):
+    tmp = df.query(f'element_id == "{key}"')
+    # ハイフンを含まない行に1を設定
+    mask = tmp['contextID'].str.match('^(?!.*\_).+$')
+    mask = mask.astype(int)
+    tmp['Consolidated'] = mask
+    tmp = tmp.query('Consolidated == 1')
+    x = tmp['endDatetime']
+    tmp['value'] = tmp['value'].astype(float)
+    y = tmp['value']
+    
+    YoY = make_YoY(x,y)
+    plotly_plot(x,y,key,YoY=YoY)
+
+
+def plotly_plot(x,y,title,YoY=None):
+    fig = go.Figure()
+    if YoY is not None:
+        fig.add_trace(go.Bar(x=x,y=y,text=YoY,marker_color='#ffffff'))
+        fig.update_layout(title=f'{title}')
+    else:
+        fig.add_trace(go.Bar(x=x,y=y,marker_color='#ffffff'))
+        fig.update_layout(title=f'{title}')
+    fig.show()
+
+def make_YoY(x,y):
+    # yがvalueなので昨年のvalueを求めて昨対比を計算
+    '''
+    y_lag:当年のvalue
+    y_lag:昨年のvalue
+    '''
+    y_lag = y.shift(1)
+    YoY = ((y/y_lag*100//1).astype(str)+'%').reset_index(drop=True)
+    YoY[0] = ""
+
+    return YoY
