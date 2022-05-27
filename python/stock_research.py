@@ -129,41 +129,39 @@ def calc_fiscal_year(prior_year, asof):
 
 
 
-def plot_sales(df,key):
+def get_sales(df,key):
     # 連結か個別か
             # Prior1YearDurationと
             # Prior1YearDuration_NonConsolidatedMemberをカテゴリ分けするために _ で列分割
     mask = df.contextID.str.contains('NonConsolidated')
     mask = mask.astype(int)
     df['NonConsolidated'] = mask
-
     tmp = df.query(f'element_id == "{key}"')
     # plotのためにfloat型に変換
     tmp['value'] = tmp['value'].astype(float)
-
     tmp = tmp.query('NonConsolidated == 0')
-    x = tmp['endDatetime']
-    y = tmp['value']
-    YoY = make_YoY(x,y)
 
-    # tmp = pd.concat([x,y],axis=1)
-    plotly_plot(x,y,key,YoY)
-    return x,y
+    tmp = tmp[['element_id','Ja_item_name','endDatetime','value']]
+    # YoY = make_YoY(tmp['value'])
+    # tmp['YoY'] = YoY.values
+
+    return tmp
 
 
-def plot_OperatingIncome(df,key):
+def get_OperatingIncome(df,key):
     tmp = df.query(f'element_id == "{key}"')
     # ハイフンを含まない行に1を設定
     mask = tmp['contextID'].str.match('^(?!.*\_).+$')
     mask = mask.astype(int)
     tmp['Consolidated'] = mask
     tmp = tmp.query('Consolidated == 1')
-    x = tmp['endDatetime']
     tmp['value'] = tmp['value'].astype(float)
-    y = tmp['value']
     
-    YoY = make_YoY(x,y)
-    plotly_plot(x,y,key,YoY=YoY)
+    tmp = tmp[['element_id','Ja_item_name','endDatetime','value']]
+    # YoY = make_YoY(tmp['value'])
+    # tmp['YoY'] = YoY.values
+
+    return tmp
 
 
 def plotly_plot(x,y,title,YoY=None):
@@ -176,7 +174,7 @@ def plotly_plot(x,y,title,YoY=None):
         fig.update_layout(title=f'{title}')
     fig.show()
 
-def make_YoY(x,y):
+def make_YoY(y):
     # yがvalueなので昨年のvalueを求めて昨対比を計算
     '''
     y_lag:当年のvalue
