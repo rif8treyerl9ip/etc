@@ -1,0 +1,5 @@
+# ハイフンを含まない行に1を設定
+    mask = tmp['contextID'].str.match('^(?!.*\_).+$')
+    mask = mask.astype(int)
+    tmp['Consolidated'] = mask
+    tmp = tmp.query('Consolidated == 1')

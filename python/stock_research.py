@@ -14,12 +14,17 @@ plt.style.use('ggplot')
 import seaborn as sns; sns.set();
 import plotly.graph_objects as go
 
+from arelle.ModelValue import qname
+from arelle import Cntlr
+
+
 # タクソノミ用ソリストの下記は営業利益とあるが、本当はOperatingIncomeらしい。
 # まじで意味わからぬ。
 # 'Operating profit (loss)':'営業利益'
 
 taiouhyou = {'NetSalesSummaryOfBusinessResults':'売上高',
-             'OperatingIncome':'営業利益'
+             'OperatingIncome':'営業利益',
+             'NetCashProvidedByUsedInOperatingActivitiesSummaryOfBusinessResults':'営業キャッシュフロー'
 }
 
 
@@ -119,6 +124,37 @@ def get_xbrl_data(path, account_df) -> pd.DataFrame:
  
     return account_df
 
+def read_xbrl(file_path,stock_code) -> pd.DataFrame:
+    ctrl = Cntlr.Cntlr(logFileName='logToPrint')
+    modelXbrl = ctrl.modelManager.load(file_path)
+    
+    fact_df = pd.DataFrame(
+    data=[(
+        fact.concept.qname.localName, 
+        fact.value,
+        # fact.isNumeric, 
+        fact.contextID,
+        # fact.concept.label(preferredLabel=None, lang='ja', linkroleHint=None),
+        # fact.concept.label(preferredLabel=None, lang='en', linkroleHint=None),
+        fact.context.startDatetime,
+        fact.context.endDatetime,
+        fact.context.instantDatetime,
+        # fact.decimals,
+    ) for fact in modelXbrl.facts],
+    columns=[
+        "element_id", 
+        "value",
+        # "isNumeric", 
+        "contextID",
+        # "Ja_item_name",
+        # "en_item_name",     
+        "startDatetime",
+        "endDatetime",
+        "instantDatetime",
+        # "decimals",
+    ])
+    return fact_df
+
 def calc_fiscal_year(prior_year, asof):
     print(prior_year,asof)
     print(int(asof.year - prior_year),asof.month, asof.day)
@@ -128,41 +164,71 @@ def calc_fiscal_year(prior_year, asof):
     
 
 
+def get_key(df,key):
+    df = df.query(f'element_id == "{key}"')
 
-def get_sales(df,key):
-    # 連結か個別か
-            # Prior1YearDurationと
-            # Prior1YearDuration_NonConsolidatedMemberをカテゴリ分けするために _ で列分割
-    mask = df.contextID.str.contains('NonConsolidated')
-    mask = mask.astype(int)
-    df['NonConsolidated'] = mask
-    tmp = df.query(f'element_id == "{key}"')
-    # plotのためにfloat型に変換
-    tmp['value'] = tmp['value'].astype(float)
-    tmp = tmp.query('NonConsolidated == 0')
-
-    tmp = tmp[['element_id','Ja_item_name','endDatetime','value']]
-    # YoY = make_YoY(tmp['value'])
-    # tmp['YoY'] = YoY.values
-
-    return tmp
-
-
-def get_OperatingIncome(df,key):
-    tmp = df.query(f'element_id == "{key}"')
-    # ハイフンを含まない行に1を設定
-    mask = tmp['contextID'].str.match('^(?!.*\_).+$')
-    mask = mask.astype(int)
-    tmp['Consolidated'] = mask
-    tmp = tmp.query('Consolidated == 1')
-    tmp['value'] = tmp['value'].astype(float)
+    if key == 'OperatingIncome':
+        df = exclusion(df)
     
-    tmp = tmp[['element_id','Ja_item_name','endDatetime','value']]
-    # YoY = make_YoY(tmp['value'])
-    # tmp['YoY'] = YoY.values
+    # plotのためにfloat型に変換
+    df['value'] = df['value'].astype(float)
 
-    return tmp
+    return df
 
+def exclusion(df):
+    mask = df['contextID'].str.contains('jpcrp')
+    df = df[~mask]
+    mask = df['contextID'].str.contains('TotalOf')
+    df = df[~mask]
+    mask = df['contextID'].str.contains('Rep')
+    df = df[~mask]
+    return df
+
+# def get_OperatingIncome(df,key):
+#     tmp = df.query(f'element_id == "{key}"')
+#     mask = tmp['contextID'].str.match('^(?!.*\_).+$')
+#     mask = mask.astype(int)
+#     tmp['value'] = tmp['value'].astype(float)
+
+#     return tmp
+
+# def get_get_eigyo_cashflow(df,key):
+#     tmp = df.query(f'element_id == "{key}"')
+#     tmp['value'] = tmp['value'].astype(float)
+
+#     return tmp
+
+def save_stock_statistics(df):
+    '''csvとして保存するための後処理'''
+    df = df.drop_duplicates()
+    min_date = df.endDatetime.min().strftime('%Y%m%d')
+    max_date = df.endDatetime.max().strftime('%Y%m%d')
+    
+    df['lag'] = df.groupby(['element_id','NonConsolidated'])['value'].shift(1)
+    # 「100%」などと整形する
+    df['Yoy'] = ((df['value']/df['lag']*100).astype(str).str[:3]+'%').replace('nan%','').replace('\.', '', regex=True)    
+
+    # df.to_csv(f'../warehouse/stock/created/individual_stock/{stock_code}_statistics_{min_date}_{max_date}.csv')
+    
+    return df
+
+def make_ratio(df,x,y,z):
+    df[f'{z}'] = ((df[f'{x}']/df[f'{y}']*100).astype(str).str[:3]+'%').replace('nan%','').replace('\.', '', regex=True)
+    return df
+
+def make_operatingincome_margin(df):
+    a = df.query('element_id == "NetSalesSummaryOfBusinessResults"').rename(columns={'value': 'value_sales'})
+    a = a[['element_id','value_sales','endDatetime','NonConsolidated']]
+    b = df.query('element_id == "NetCashProvidedByUsedInOperatingActivitiesSummaryOfBusinessResults"').rename(columns={'value': 'value_operatingincome'})
+    b = b[['value_operatingincome','endDatetime','NonConsolidated']]
+    tmp = pd.merge(a,b, on=['endDatetime','NonConsolidated'],how='left')
+    tmp = sr.make_ratio(tmp,'value_operatingincome','value_sales','operatingincome_margin')
+    tmp.drop('value_operatingincome',axis=1,inplace=True)
+
+    df = pd.merge(df,tmp,on=['element_id','endDatetime','NonConsolidated'],how='left')
+    df['operatingincome_margin'].replace(np.nan,'',inplace=True)
+    
+    return df
 
 def plotly_plot(x,y,title,YoY=None):
     fig = go.Figure()
