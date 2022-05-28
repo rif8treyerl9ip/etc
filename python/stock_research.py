@@ -208,7 +208,7 @@ def save_stock_statistics(df):
     # 「100%」などと整形する
     df['Yoy'] = ((df['value']/df['lag']*100).astype(str).str[:3]+'%').replace('nan%','').replace('\.', '', regex=True)    
 
-    # df.to_csv(f'../warehouse/stock/created/individual_stock/{stock_code}_statistics_{min_date}_{max_date}.csv')
+    df.to_csv(f'../warehouse/stock/created/result_statistics/stock_statistics_{min_date}_{max_date}.csv',index=False)
     
     return df
 
@@ -222,7 +222,7 @@ def make_operatingincome_margin(df):
     b = df.query('element_id == "NetCashProvidedByUsedInOperatingActivitiesSummaryOfBusinessResults"').rename(columns={'value': 'value_operatingincome'})
     b = b[['value_operatingincome','endDatetime','NonConsolidated']]
     tmp = pd.merge(a,b, on=['endDatetime','NonConsolidated'],how='left')
-    tmp = sr.make_ratio(tmp,'value_operatingincome','value_sales','operatingincome_margin')
+    tmp = make_ratio(tmp,'value_operatingincome','value_sales','operatingincome_margin')
     tmp.drop('value_operatingincome',axis=1,inplace=True)
 
     df = pd.merge(df,tmp,on=['element_id','endDatetime','NonConsolidated'],how='left')
