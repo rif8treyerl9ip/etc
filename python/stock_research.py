@@ -132,26 +132,26 @@ def read_xbrl(file_path,stock_code) -> pd.DataFrame:
     data=[(
         fact.concept.qname.localName, 
         fact.value,
-        # fact.isNumeric, 
+        fact.isNumeric, 
         fact.contextID,
-        # fact.concept.label(preferredLabel=None, lang='ja', linkroleHint=None),
-        # fact.concept.label(preferredLabel=None, lang='en', linkroleHint=None),
+        fact.concept.label(preferredLabel=None, lang='ja', linkroleHint=None),
+        fact.concept.label(preferredLabel=None, lang='en', linkroleHint=None),
         fact.context.startDatetime,
         fact.context.endDatetime,
         fact.context.instantDatetime,
-        # fact.decimals,
+        fact.decimals,
     ) for fact in modelXbrl.facts],
     columns=[
         "element_id", 
         "value",
-        # "isNumeric", 
+        "isNumeric", 
         "contextID",
-        # "Ja_item_name",
-        # "en_item_name",     
+        "Ja_item_name",
+        "en_item_name",     
         "startDatetime",
         "endDatetime",
         "instantDatetime",
-        # "decimals",
+        "decimals",
     ])
     return fact_df
 
@@ -204,11 +204,11 @@ def save_stock_statistics(df):
     min_date = df.endDatetime.min().strftime('%Y%m%d')
     max_date = df.endDatetime.max().strftime('%Y%m%d')
     
-    df['lag'] = df.groupby(['element_id','NonConsolidated'])['value'].shift(1)
+    df['lag'] = df.groupby(['secCode','element_id','NonConsolidated'])['value'].shift(1)
     # 「100%」などと整形する
     df['Yoy'] = ((df['value']/df['lag']*100).astype(str).str[:3]+'%').replace('nan%','').replace('\.', '', regex=True)    
 
-    df.to_csv(f'../warehouse/stock/created/result_statistics/stock_statistics_{min_date}_{max_date}.csv',index=False)
+    # df.to_csv(f'../warehouse/stock/created/result_statistics/stock_statistics_{min_date}_{max_date}.csv',index=False)
     
     return df
 
