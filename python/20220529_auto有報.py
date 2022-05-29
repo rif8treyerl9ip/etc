@@ -22,16 +22,16 @@ last_ymd_first,last_ymd_last
 
 DOC_TYPE_CODE=['120']
 SUMMARY_TYPE = 2
-# start_date = datetime(
-#     int(last_ymd_first[:4]),
-#     int(last_ymd_first[4:6]),
-#     int(last_ymd_first[-2:]))
-# end_date = datetime(
-#     int(last_ymd_last[:4]),
-#     int(last_ymd_last[4:6]),
-#     int(last_ymd_last[-2:]))
-start_date = datetime(2021,11,16)
-end_date = datetime(2021,11,30)
+start_date = datetime(
+    int(last_ymd_first[:4]),
+    int(last_ymd_first[4:6]),
+    int(last_ymd_first[-2:]))
+end_date = datetime(
+    int(last_ymd_last[:4]),
+    int(last_ymd_last[4:6]),
+    int(last_ymd_last[-2:]))
+# start_date = datetime(2021,11,16)
+# end_date = datetime(2021,11,30)
 
 print(f'{start_date}~{end_date}間の有価証券報告書取得')
 i = -1
