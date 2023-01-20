@@ -17,7 +17,8 @@ result_path = '../warehouse/stock/created/result_statistics/stock_*.csv'
 # print([i.split('\\')[-1] for i in glob.glob(result_path)])
 RESULT_CSV = min([i.split('\\')[-1] for i in glob.glob(result_path)])
 RESULT_PATH = f'../warehouse/stock/created/result_statistics/{RESULT_CSV}'
-print(f'''最前期~最新期: {RESULT_CSV.split('.')[0][-8:]}~{RESULT_CSV.split('.')[0][-17:-9]}''')
+s0 = f'''最前期~最新期: {RESULT_CSV.split('.')[0][-8:]}~{RESULT_CSV.split('.')[0][-17:-9]}'''
+print(s0)
 
 
 result = pd.read_csv(RESULT_PATH)
@@ -26,8 +27,8 @@ today = datetime.datetime.today().strftime('%Y%m%d')
 filepath = f'../warehouse/stock/created/result_statistics/{today}_report.txt'
 TH_OPEMARGIN = 35
 TH_SALES_CAGR = 1.20
-SENTENCE = f'\n報告日 {today} 基準値\n営業CFマージン {TH_OPEMARGIN}%\tCAGR {int(TH_SALES_CAGR*100)}%'+'\n'
-SENTENCE = today + SENTENCE
+SENTENCE = f'\n報告日 {today} {s0} \n\t 基準値 営業CFマージン {TH_OPEMARGIN}%\tCAGR {int(TH_SALES_CAGR*100)}%'+'\n'
+SENTENCE = SENTENCE
 
 with open(filepath, mode='a') as f:
     f.write(SENTENCE)
@@ -72,7 +73,7 @@ for stock in result.secCode.unique():
     #############################################################
     
     if (gmean_2 > TH_SALES_CAGR) and (mean_1 > TH_OPEMARGIN):
-        ss = f'''{s}CAGR({count_2}) > {gmean_2:.3f}\n営業CFマージン{TH_OPEMARGIN} {count_1}年 {mean_1:.2f}% > {TH_SALES_CAGR}%\n'''
+        ss = f'''{s}営業CFマージン{count_1}年 {mean_1:.2f}% > {TH_OPEMARGIN}\nCAGR({count_2}) {gmean_2:.3f} > {TH_SALES_CAGR}\n'''
         with open(filepath, mode='a') as f:
             f.write(ss)
     
