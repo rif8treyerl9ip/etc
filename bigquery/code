@@ -1,0 +1,23 @@
+帰ってくる結果を--の後に記載
+
+
+-- サンプルテーブル
+CREATE TABLE `プロジェクト名.SAMPLE111.my_table_2`
+(
+  id INT64,
+  name STRING,
+  date DATE
+)
+OPTIONS(
+  expiration_timestamp=TIMESTAMP_ADD(CURRENT_TIMESTAMP(), INTERVAL 1 DAY),
+  description="サンプルテーブル"
+)
+INSERT INTO `sample.SAMPLE111.my_table_2` (id, name, date)
+VALUES (1, "Alice", "2021-01-01"), (2, "Bob", "2021-02-01"), (3, "Charlie", "2021-03-01"), (NULL, "sato", NULL);
+
+-- 動的sqlメモ
+EXECUTE IMMEDIATE """
+SELECT @param
+"""
+USING
+1 AS param
