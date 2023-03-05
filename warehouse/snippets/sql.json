@@ -1,0 +1,99 @@
+// githubにpushする場合、機密情報を含まないように注意
+{
+	"AGG()~OVER(PARTITION BY ORDER BY)": {
+		"prefix": "AGV",
+		"body": [
+			"AGG(${1:hoge}) OVER(PARTITION BY ${2:fuga} ORDER BY ${3:piyo} ASC) AS $4",
+			"",
+		],
+		"description": "集約関数+OVER句(PARTITION BY句 + ORDER BY句）！"
+	}
+	"BETWEEN": {
+		"prefix": "BE",
+		"body": [
+			"BETWEEN ${1:hoge} AND ${2:fuga}",
+			"",
+		],
+	}
+	"CASE WHEN": {
+		"prefix": "CA",
+		"body": [
+			"CASE WHEN ${1:hoge} THEN ${2:fuga} ELSE ${3:piyo} END",
+			"",
+		],
+		"description": "CASE式！"
+	}
+	"INTERVAL": {
+		"prefix": "IN",
+		"body": [
+			"INTERVAL ${1:hoge} HOUR",
+			"",
+		],
+		"description": "INTERVAL型！"
+	}
+	"SELECT": {"prefix": "S","body": "SELECT 1 AS DUMMY\n\t,${1:hoge}\n"}
+	"FROM": {"prefix": "F","body": "FROM ${1:hoge}\n"}
+	"GROUP BY": {"prefix": "G","body": "GROUP BY ${1:hoge}\n"}
+	"ORDER BY": {"prefix": "O","body": "ORDER BY ${1:hoge} ${2:ASC};"}
+	"SELECT FROM GROUP BY ORDER BY": {
+		"prefix": "SFGO",
+		"body": [
+			"SELECT ${1:hoge}","FROM ${2:fuga}","GROUP BY ${3:piyo}","ORDER BY $4 ASC;\n",
+		],
+	}
+
+	/*ここから定数・変数ゾーン！*/
+	"TIMEZONE": {
+		"prefix": "TI",
+		"body": [
+			"CREATE TEMP FUNCTION TIMEZONE() AS ('Asia/Tokyo');",
+			"select DATE('2022-01-01', TIMEZONE());"
+			"",
+		],
+		"description": "TIMEZONE定数を使用してタイムゾーンの流用ができる！"
+	}
+	"TODAY": {
+		"prefix": "TOD",
+		"body": "$CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE"
+	}
+	
+	"ymd": {
+		"prefix": "ymd",
+		"body": "'${1:2023}-${2:01}-${3:01}'"
+		}
+
+	/*カタログ確認*/
+	"CHECK UDF": {
+		"prefix": "CUDF",
+		"body": [
+			"SELECT",
+				"\t*",
+			"FROM",
+				"\t${1:projectid}.${2:dataset}.INFORMATION_SCHEMA.ROUTINES",
+			"WHERE",
+				"\tROUTINE_TYPE LIKE '%FUNCTION%'",
+			"ORDER BY specific_name asc;",
+			"",
+		],
+		"description": "作成したUDF（永続関数）をチェック！"
+	}
+
+
+	/*bigqueryでよく使用する単語。足していく。*/
+	// ↓は例
+	"android": {"prefix": "an","body": "android"}
+	// "ios": {"prefix": "i","body": "ios"}
+	"subscription": {"prefix": "sub","body": "subscription"}
+	
+	
+	/*4.マスタデータ*/
+	// ↓は例
+	"東京": {"prefix": "東京","body": "17"}
+
+
+}
+
+
+
+
+
