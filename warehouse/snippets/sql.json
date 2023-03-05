@@ -2,9 +2,23 @@
 
 // 参考：
 // https://medium.com/eureka-engineering/%E5%88%86%E6%9E%90%E3%82%AF%E3%82%A8%E3%83%AA%E3%82%92-%E9%80%9F%E3%81%8F-%E6%A5%BD%E3%81%AB-%E6%AD%A3%E7%A2%BA%E3%81%AB-%E6%9B%B8%E3%81%8F%E3%81%9F%E3%82%81%E3%81%AB%E3%82%B9%E3%83%8B%E3%83%9A%E3%83%83%E3%83%88%E3%81%AB%E7%99%BB%E9%8C%B2%E3%81%99%E3%81%B9%E3%81%8D%E3%82%82%E3%81%AE5%E9%81%B8-8ce720a3c00d
+// https://medium.com/eureka-engineering/bigquery-standard-sql-f13b04c0b6c4
 
 {
-	// 組み込み関数
+	"AGE": {
+		"prefix": "AGE",
+		"body": [
+				"CREATE TEMP FUNCTION make_age(birthday DATE, base DATE)",
+				"RETURNS INT64 AS (",
+				"	CAST(",
+				"	FLOOR((",
+				"		CAST(FORMAT_DATE('%Y%m%d', base) AS INT64) -",
+				"		CAST(FORMAT_DATE('%Y%m%d', birthday) AS INT64)",
+				"	)/10000)",
+				"	AS INT64));",
+		],
+		"description": "年齢を計算する一時関数"
+	},
 	"AGG()~OVER(PARTITION BY ORDER BY)": {
 		"prefix": "AGV",
 		"body": [
@@ -12,14 +26,14 @@
 			"",
 		],
 		"description": "集約関数+OVER句(PARTITION BY句 + ORDER BY句）！"
-	}
+	},
 	"BETWEEN": {
 		"prefix": "BE",
 		"body": [
 			"BETWEEN ${1:hoge} AND ${2:fuga}",
 			"",
 		],
-	}
+	},
 	"CASE WHEN": {
 		"prefix": "CA",
 		"body": [
@@ -27,25 +41,31 @@
 			"",
 		],
 		"description": "CASE式！"
-	}
+	},
 	"INTERVAL": {
 		"prefix": "IN",
 		"body": [
 			"INTERVAL ${1:hoge} HOUR",
 			"",
 		],
-		"description": "INTERVAL型！"
-	}
-	"SELECT": {"prefix": "S","body": "SELECT 1 AS DUMMY\n\t,${1:hoge}\n"}
-	"FROM": {"prefix": "F","body": "FROM ${1:hoge}\n"}
-	"GROUP BY": {"prefix": "G","body": "GROUP BY ${1:hoge}\n"}
-	"ORDER BY": {"prefix": "O","body": "ORDER BY ${1:hoge} ${2:ASC};"}
+	},
+	"TABLESAMPLE": {
+		"prefix": "TS",
+		"body": [
+			"TABLESAMPLE SYSTEM(1 PERCENT)",
+			"",
+		],
+	},
+	"SELECT": {"prefix": "S","body": "SELECT 1 AS DUMMY\n\t,${1:hoge}\n"},
+	"FROM": {"prefix": "F","body": "FROM ${1:hoge}\n"},
+	"GROUP BY": {"prefix": "G","body": "GROUP BY ${1:hoge}\n"},
+	"ORDER BY": {"prefix": "O","body": "ORDER BY ${1:hoge} ${2:ASC};"},
 	"SELECT FROM GROUP BY ORDER BY": {
 		"prefix": "SFGO",
 		"body": [
 			"SELECT ${1:hoge}","FROM ${2:fuga}","GROUP BY ${3:piyo}","ORDER BY $4 ASC;\n",
 		],
-	}
+	},
 
 	/*ここから定数・変数ゾーン！*/
 	"TIMEZONE": {
@@ -56,19 +76,19 @@
 			"",
 		],
 		"description": "TIMEZONE定数を使用してタイムゾーンの流用ができる！"
-	}
+	},
 	"TODAY": {
 		"prefix": "TOD",
 		"body": "$CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE"
-	}
+	},
 	"UNNEST": {
 		"prefix": "UN",
 		"body": "SELECT _array FROM UNNEST([1,2,3]) AS _array"
-		}
+		},
 	"ymd": {
 		"prefix": "ymd",
 		"body": "'${1:2023}-${2:01}-${3:01}'"
-		}
+		},
 
 	/*カタログ確認*/
 	"CHECK UDF": {
@@ -78,25 +98,25 @@
 				"\t*",
 			"FROM",
 				"\t${1:projectid}.${2:dataset}.INFORMATION_SCHEMA.ROUTINES",
-			"WHERE",
+				"WHERE",
 				"\tROUTINE_TYPE LIKE '%FUNCTION%'",
-			"ORDER BY specific_name asc;",
-			"",
-		],
+				"ORDER BY specific_name asc;",
+				"",
+			],
 		"description": "作成したUDF（永続関数）をチェック！"
-	}
+	},
 	
 	
 	/*bigqueryでよく使用する単語。足していく。*/
 	// ↓は例
-	"android": {"prefix": "an","body": "android"}
-	// "ios": {"prefix": "i","body": "ios"}
-	"subscription": {"prefix": "sub","body": "subscription"}
+	"android": {"prefix": "an","body": "android"},
+	// "ios": {"prefix": "i","body": "ios"},
+	"subscription": {"prefix": "sub","body": "subscription"},
 	
 	
 	/*4.マスタデータ*/
 	// ↓は例
-	"東京": {"prefix": "東京","body": "17"}
+	"東京": {"prefix": "東京","body": "17"},
 	
 	
 	// eda
@@ -104,17 +124,17 @@
 		"prefix": "e1",
 		"body": "SELECT * FROM `${1:projectid}.${2:dataset}.__TABLES__` ORDER BY table_id ASC;",
 		"description": "テーブルのリストを表示"
-	}
+	},
 	"e2": {
 		"prefix": "e2",
 		"body": "SELECT * FROM `${1:projectid}.${2:dataset}.INFORMATION_SCHEMA.COLUMNS` WHERE table_name = '${3:table_name}' ORDER BY column_name ASC;",
 		"description": "テーブルのスキーマを表示"
-	}
+	},
 	"e3": {
 		"prefix": "e3",
 		"body": "SELECT * FROM `${1:projectid}.${2:dataset}.${3:table_name}` TABLESAMPLE SYSTEM(1 PERCENT);",
-		"description": "テーブルの全体像を表示するスニペット。テーブルサンプリングは1%"
-	}
+		"description": "全カラム・テーブルサンプリング1%"
+	},
 	"e4": {
 		"prefix": "e4",
 		"body": [
@@ -126,7 +146,7 @@
 			") AS moving_average_3_week"
 		],
 		"description": "3週移動平均"
-	}
+	},
 	"e5": {
 		"prefix": "e5",
 		"body": [
@@ -136,8 +156,19 @@
 			"select dt from calendar;",
 		],
 		"description": "STARTDATE~ENDDATE間の日付数列の作成"
-	}
-	
+	},
+	// RV観点
+	"PK1": {
+		"prefix": "PK1",
+		"body": [
+			"SELECT id, COUNT(*) as count",
+			"FROM `${1:projectid}.${2:dataset}.${3:table_name}",
+			"GROUP BY id",
+			"HAVING count > 1",
+			"order by id",
+		],
+		"description": "PKユニークのチェック"
+	},
 	"table1": {
 		"prefix": "tb1",
 		"body": [
@@ -163,51 +194,51 @@
 				"SELECT DT, UID, AMOUNT, PRODUCT_NAME",
 				"FROM __tmp_test_1;",
 			],
-		}
+		},
 
-		"table2": {
-			"prefix": "tb2",
-			"body": [
-				"CREATE TEMP TABLE if not exists __tmp_test_2 (",
-				"id INT64,",
-				"names ARRAY<STRING>,",
-				"score FLOAT64",
-				");",
-				"",
-				"INSERT INTO __tmp_test_2 (id, names, score)",
-				"VALUES (1, ['Alice', 'Bob', 'Charlie'], 70.0),",
-				"(2, ['David', 'Emily'], 95.0);",
-				"",
-				"SELECT id, names, names[OFFSET(0)] AS name, score",
-				"FROM __tmp_test_2",
-				"WHERE id = 1;",
-				
-				"SELECT id, name, score",
-				"FROM __tmp_test_2, UNNEST(names) AS name;",
-				
-				"-- DROP TABLE __tmp_test_2;"
-				],
-			}
-		
-		// テスト
-		"t1": {
-			"prefix": "t1",
-			"body": [
-					"FROM test_$RANDOM_HEX;",
-				],
-			}
-		"t2": {
-			"prefix": "t2",
-			"body": [
-					"FROM test_$RANDOM_HEX;",
-				],
-			}
-		"t3": {
-			"prefix": "t3",
-			"body": [
-					"FROM test_$RANDOM_HEX;",
-				],
-			}
+	"table2": {
+		"prefix": "tb2",
+		"body": [
+			"CREATE TEMP TABLE if not exists __tmp_test_2 (",
+			"id INT64,",
+			"names ARRAY<STRING>,",
+			"score FLOAT64",
+			");",
+			"",
+			"INSERT INTO __tmp_test_2 (id, names, score)",
+			"VALUES (1, ['Alice', 'Bob', 'Charlie'], 70.0),",
+			"(2, ['David', 'Emily'], 95.0);",
+			"",
+			"SELECT id, names, names[OFFSET(0)] AS name, score",
+			"FROM __tmp_test_2",
+			"WHERE id = 1;",
+			
+			"SELECT id, name, score",
+			"FROM __tmp_test_2, UNNEST(names) AS name;",
+			
+			"-- DROP TABLE __tmp_test_2;"
+			],
+		},
+	
+	// テスト
+	"t1": {
+		"prefix": "t1",
+		"body": [
+				"FROM test_$RANDOM_HEX;",
+			],
+		},
+	"t2": {
+		"prefix": "t2",
+		"body": [
+				"FROM test_$RANDOM_HEX;",
+			],
+		},
+	"t3": {
+		"prefix": "t3",
+		"body": [
+				"FROM test_$RANDOM_HEX;",
+			],
+		},
 	}
 
 	/*
