@@ -97,18 +97,26 @@
 	"ymd": {
 		"prefix": "ymd",
 		"body": "'${1:2023}-${2:01}-${3:01}'"
+	},
+	"_T": {
+		"prefix": "_T",
+		"body": "_TABLE_SUFFIX between '20230201' AND '20230331'"
 		},
-
+	"_P": {
+		"prefix": "_P",
+		"body": "_PARTITIONTIME between '20230201' AND '20230331'?"
+		},
+		
 	/*カタログ確認*/
 	"CHECK UDF": {
 		"prefix": "CUDF",
 		"body": [
 			"SELECT",
-				"\t*",
+			"\t*",
 			"FROM",
-				"\t${1:projectid}.${2:dataset}.INFORMATION_SCHEMA.ROUTINES",
-				"WHERE",
-				"\tROUTINE_TYPE LIKE '%FUNCTION%'",
+			"\t${1:projectid}.${2:dataset}.INFORMATION_SCHEMA.ROUTINES",
+			"WHERE",
+			"\tROUTINE_TYPE LIKE '%FUNCTION%'",
 				"ORDER BY specific_name asc;",
 				"",
 			],
@@ -418,6 +426,17 @@ FROM
   `fadsfdsa.fadsfdsa.mytable*`;
 
 
+select 
+fullVisitorId AS Visitor_ID,
+hits.contentGroup.contentGroup3 as Topic_Name,
+hits.contentGroup.contentGroup5 as Topic_ID,
+hits.eventInfo.eventCategory as Event_Category,
+hits.eventInfo.eventAction as Event_Action
+FROM
+  `bigquery-public-data.google_analytics_sample.ga_sessions_*` as t
+  , UNNEST (HITS) AS HITS
+where  _TABLE_SUFFIX between  '20170801' AND '20170801'
+and fullVisitorId="3418334011779872055"
 
 
 
